@@ -21,6 +21,8 @@ repositories {
 }
 
 dependencies {
+    compile 'io.ratpack:ratpack-guice:1.7.6'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
 
