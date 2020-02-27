@@ -1,0 +1,38 @@
+<configuration>
+
+    <appender name="APPLICATION_LOG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/application.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="REQUEST_LOG_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/request.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="ratpack.request" level="info" additivity="false">
+        <appender-ref ref="REQUEST_LOG_FILE"/>
+    </logger>
+
+    <logger name="dev.sswatosh.fridgemanager" level="info">
+        <appender-ref ref="APPLICATION_LOG_FILE"/>
+    </logger>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

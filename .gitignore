@@ -2,6 +2,9 @@
 .gradle/
 build/
 
+# logs
+logs/
+
 # IntelliJ
 *.iml
 .idea
