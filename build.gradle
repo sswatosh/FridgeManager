@@ -54,4 +54,4 @@ jacocoTestReport {
     }
 }
 
-mainClassName = 'dev.sswatosh.Main'
+mainClassName = 'dev.sswatosh.fridgemanager.Main'
