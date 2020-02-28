@@ -41,6 +41,6 @@ public class FridgeHandler implements Handler {
     }
 
     private long getFridgeId(Context ctx) {
-        return pathIdParser.parse(ctx.getAllPathTokens().get(Path.FRIDGES.id));
+        return pathIdParser.parse(ctx, Path.FRIDGES.id);
     }
 }

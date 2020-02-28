@@ -4,11 +4,14 @@ import dev.sswatosh.fridgemanager.domain.Fridge;
 import dev.sswatosh.fridgemanager.domain.FridgeUpdateRequest;
 import dev.sswatosh.fridgemanager.exceptions.ValidationException;
 import dev.sswatosh.fridgemanager.repository.FridgeDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
 
 public class FridgeController {
+    Logger logger = LoggerFactory.getLogger(FridgeController.class);
 
     private final FridgeDAO fridgeDAO;
 
@@ -30,8 +33,11 @@ public class FridgeController {
             throw new ValidationException("missing 'name' field");
         }
 
-        long newFridgeId = fridgeDAO.createFridge(request.getName());
-        return new Fridge(newFridgeId, request.getName());
+        long newId = fridgeDAO.createFridge(request.getName());
+        Fridge fridge = new Fridge(newId, request.getName());
+
+        logger.info("Fridge added. Id: {}", newId);
+        return fridge;
     }
 
     public void updateFridge(long id, FridgeUpdateRequest request) {
@@ -42,5 +48,6 @@ public class FridgeController {
             currentFridge.getName();
 
         fridgeDAO.updateFridge(id, updatedName);
+        logger.info("Fridge updated. Id: {}", id);
     }
 }

@@ -26,10 +26,10 @@ public class JDBCHelper {
         this.dataSource = dataSource;
     }
 
-    protected <T> T selectById(String query, long id, Function<ResultSet, T> resultMapper) {
+    protected <T> T selectOne(String query, List<Object> arguments, Function<ResultSet, T> resultMapper) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement select = connection.prepareStatement(query);
-            select.setLong(1, id);
+            setArguments(select, arguments);
             ResultSet results = select.executeQuery();
             if (results.next()) {
                 return resultMapper.apply(results);
@@ -42,9 +42,11 @@ public class JDBCHelper {
         }
     }
 
-    protected <T> List<T> selectAll(String query, Function<ResultSet, T> resultMapper) {
+    protected <T> List<T> selectAll(String query, List<Object> arguments, Function<ResultSet, T> resultMapper) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement select = connection.prepareStatement(query);
+            setArguments(select, arguments);
+
             ResultSet results = select.executeQuery();
             List<T> resultList = new LinkedList<T>();
             while (results.next()) {
@@ -60,10 +62,7 @@ public class JDBCHelper {
     protected long insert(String query, List<Object> arguments) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement insert = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-
-            for (int i = 0; i < arguments.size(); i++) {
-                insert.setObject(i+1, arguments.get(i));
-            }
+            setArguments(insert, arguments);
 
             int affectedRows = insert.executeUpdate();
             if (affectedRows != 1) {
@@ -84,15 +83,10 @@ public class JDBCHelper {
         }
     }
 
-    protected void update(String query, List<Object> arguments, long id) {
+    protected void update(String query, List<Object> arguments) {
         try (Connection connection = dataSource.getConnection()) {
             PreparedStatement update = connection.prepareStatement(query);
-
-            for (int i = 0; i < arguments.size(); i++) {
-                update.setObject(i+1, arguments.get(i));
-            }
-
-            update.setLong(arguments.size() + 1, id);
+            setArguments(update, arguments);
 
             int affectedRows = update.executeUpdate();
             if (affectedRows != 1) {
@@ -102,6 +96,12 @@ public class JDBCHelper {
         } catch (SQLException e) {
             logger.error("Update failed", e);
             throw new DatabaseException("Failed to execute update", e);
+        }
+    }
+
+    private void setArguments(PreparedStatement statement, List<Object> arguments) throws SQLException {
+        for (int i = 0; i < arguments.size(); i++) {
+            statement.setObject(i+1, arguments.get(i));
         }
     }
 }

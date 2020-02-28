@@ -48,21 +48,18 @@ public class FridgeDAO {
     };
 
     public Fridge getFridgeById(long id) {
-        return jdbcHelper.selectById(SELECT_FRIDGE_BY_ID, id, parseFridgeFromResultSet);
+        return jdbcHelper.selectOne(SELECT_FRIDGE_BY_ID, List.of(id), parseFridgeFromResultSet);
     }
 
     public List<Fridge> getAllFridges() {
-        return jdbcHelper.selectAll(SELECT_ALL_FRIDGES, parseFridgeFromResultSet);
+        return jdbcHelper.selectAll(SELECT_ALL_FRIDGES, List.of(), parseFridgeFromResultSet);
     }
 
     public long createFridge(String name) {
-        long newId = jdbcHelper.insert(INSERT_FRIDGE, List.of(name));
-        logger.info("New fridge created. Id: {}, Name: {}", newId, name);
-        return newId;
+        return jdbcHelper.insert(INSERT_FRIDGE, List.of(name));
     }
 
     public void updateFridge(long id, String name) {
-        jdbcHelper.update(UPDATE_FRIDGE, List.of(name), id);
-        logger.info("Fridge updated. Id: {}, Name: {}", id, name);
+        jdbcHelper.update(UPDATE_FRIDGE, List.of(name, id));
     }
 }

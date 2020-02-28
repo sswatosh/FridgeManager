@@ -64,11 +64,11 @@ class JDBCHelperTest {
         when(mockResults.next())
             .thenReturn(true);
 
-        String result = jdbcHelper.selectById(TEST_QUERY, TEST_ID, TEST_RESULT_MAPPER);
+        String result = jdbcHelper.selectOne(TEST_QUERY, List.of(TEST_ID), TEST_RESULT_MAPPER);
 
         checkStatementQuery(TEST_QUERY);
         verify(mockStatement, times(1))
-            .setLong(1,TEST_ID);
+            .setObject(1,TEST_ID);
         assertThat(result, equalTo(TEST_MAPPER_RESULT));
     }
 
@@ -81,7 +81,7 @@ class JDBCHelperTest {
 
         assertThrows(
             NotFoundException.class,
-            () -> jdbcHelper.selectById(TEST_QUERY, TEST_ID, TEST_RESULT_MAPPER)
+            () -> jdbcHelper.selectOne(TEST_QUERY, List.of(TEST_ID), TEST_RESULT_MAPPER)
         );
     }
 
@@ -93,7 +93,7 @@ class JDBCHelperTest {
 
         assertThrows(
             DatabaseException.class,
-            () -> jdbcHelper.selectById(TEST_QUERY, TEST_ID, TEST_RESULT_MAPPER)
+            () -> jdbcHelper.selectOne(TEST_QUERY, List.of(TEST_ID), TEST_RESULT_MAPPER)
         );
     }
 
@@ -106,9 +106,11 @@ class JDBCHelperTest {
             .thenReturn(true)
             .thenReturn(false);
 
-        List<String> result = jdbcHelper.selectAll(TEST_QUERY, TEST_RESULT_MAPPER);
+        List<String> result = jdbcHelper.selectAll(TEST_QUERY, List.of(TEST_ID), TEST_RESULT_MAPPER);
 
         checkStatementQuery(TEST_QUERY);
+        verify(mockStatement, times(1))
+            .setObject(1,TEST_ID);
         assertThat(result, equalTo(List.of(TEST_MAPPER_RESULT, TEST_MAPPER_RESULT)));
     }
 
@@ -119,7 +121,7 @@ class JDBCHelperTest {
         when(mockResults.next())
             .thenReturn(false);
 
-        List<String> result = jdbcHelper.selectAll(TEST_QUERY, TEST_RESULT_MAPPER);
+        List<String> result = jdbcHelper.selectAll(TEST_QUERY, List.of(), TEST_RESULT_MAPPER);
 
         checkStatementQuery(TEST_QUERY);
         assertThat(result, equalTo(List.of()));
@@ -133,7 +135,7 @@ class JDBCHelperTest {
 
         assertThrows(
             DatabaseException.class,
-            () -> jdbcHelper.selectAll(TEST_QUERY, TEST_RESULT_MAPPER)
+            () -> jdbcHelper.selectAll(TEST_QUERY, List.of(), TEST_RESULT_MAPPER)
         );
     }
 
@@ -184,14 +186,14 @@ class JDBCHelperTest {
         when(mockStatement.executeUpdate())
             .thenReturn(1);
 
-        jdbcHelper.update(TEST_QUERY, List.of(22, "bb"), TEST_ID);
+        jdbcHelper.update(TEST_QUERY, List.of(22, "bb", TEST_ID));
 
         verify(mockStatement, times(1))
             .setObject(1, 22);
         verify(mockStatement, times(1))
             .setObject(2, "bb");
         verify(mockStatement, times(1))
-            .setLong(3, TEST_ID);
+            .setObject(3, TEST_ID);
     }
 
     @Test
@@ -202,7 +204,7 @@ class JDBCHelperTest {
 
         assertThrows(
             DatabaseException.class,
-            () -> jdbcHelper.update(TEST_QUERY, List.of(), TEST_ID)
+            () -> jdbcHelper.update(TEST_QUERY, List.of(TEST_ID))
         );
     }
 

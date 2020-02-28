@@ -31,6 +31,15 @@ class MainTest {
 
     @Test
     @Order(3)
+    public void testGetFridges() {
+        assertEquals(
+            "[{\"id\":1,\"name\":\"Kitchen\"}]",
+            GET("/api/fridges")
+        );
+    }
+
+    @Test
+    @Order(4)
     public void testGetFridge() {
         assertEquals(
             "{\"id\":1,\"name\":\"Kitchen\"}",
@@ -39,7 +48,7 @@ class MainTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testUpdateFridge() {
         assertEquals(
             "",
@@ -51,8 +60,71 @@ class MainTest {
         );
     }
 
+    @Test
+    @Order(6)
+    public void testGetItemsInitiallyEmpty() {
+        assertEquals("[]", GET("/api/fridges/1/items"));
+    }
+
+    @Test
+    @Order(7)
+    public void testAddItem() {
+        assertEquals(
+            "{\"id\":1,\"fridgeId\":1,\"type\":\"SODA\",\"name\":\"Dr Pepper\"}",
+            POST("/api/fridges/1/items", "{\"type\":\"SODA\",\"name\":\"Dr Pepper\"}")
+        );
+    }
+
+    @Test
+    @Order(8)
+    public void testGetItems() {
+        assertEquals(
+            "[{\"id\":1,\"fridgeId\":1,\"type\":\"SODA\",\"name\":\"Dr Pepper\"}]",
+            GET("/api/fridges/1/items")
+        );
+    }
+
+    @Test
+    @Order(9)
+    public void testGetItem() {
+        assertEquals(
+            "{\"id\":1,\"fridgeId\":1,\"type\":\"SODA\",\"name\":\"Dr Pepper\"}",
+            GET("/api/fridges/1/items/1")
+        );
+    }
+
+    @Test
+    @Order(10)
+    public void testUpdateItem() {
+        assertEquals(
+            "",
+            PATCH("/api/fridges/1/items/1", "{\"name\":\"Mtn Dew\"}")
+        );
+        assertEquals(
+            "{\"id\":1,\"fridgeId\":1,\"type\":\"SODA\",\"name\":\"Mtn Dew\"}",
+            GET("/api/fridges/1/items/1")
+        );
+    }
+
+    @Test
+    @Order(11)
+    public void testDeleteItem() {
+        assertEquals(
+            "",
+            DELETE("/api/fridges/1/items/1")
+        );
+        assertEquals(
+            "[]",
+            GET("/api/fridges/1/items/")
+        );
+    }
+
     private String GET(String path) {
         return mainApp.getHttpClient().getText(path);
+    }
+
+    private String DELETE(String path) {
+        return mainApp.getHttpClient().deleteText(path);
     }
 
     private String POST(String path, String requestBody) {
