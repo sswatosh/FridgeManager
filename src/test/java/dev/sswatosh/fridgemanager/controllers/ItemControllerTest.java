@@ -16,6 +16,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.when;
 class ItemControllerTest {
     private static final long TEST_ITEM_ID = 5;
     private static final long TEST_FRIDGE_ID = 10;
+    private static final String TEST_ITEM_NAME = "New Coke";
 
     @Mock
     private ItemDAO itemDAO;
@@ -58,17 +60,18 @@ class ItemControllerTest {
     @Test
     public void testAddItem() {
         ItemUpdateRequest request = new ItemUpdateRequest();
-        request.setType(ItemType.EGGS);
-        request.setName("Dozen eggs");
-        when(itemDAO.createItem(TEST_FRIDGE_ID, ItemType.EGGS, "Dozen eggs"))
+        request.setType(ItemType.SODA);
+        request.setName(TEST_ITEM_NAME);
+        mockNoSodas();
+        when(itemDAO.createItem(TEST_FRIDGE_ID, ItemType.SODA, TEST_ITEM_NAME))
             .thenReturn(TEST_ITEM_ID);
 
         Item result = itemController.addItem(TEST_FRIDGE_ID, request);
 
         assertThat(result.getId(), equalTo(TEST_ITEM_ID));
         assertThat(result.getFridgeId(), equalTo(TEST_FRIDGE_ID));
-        assertThat(result.getType(), equalTo(ItemType.EGGS));
-        assertThat(result.getName(), equalTo("Dozen eggs"));
+        assertThat(result.getType(), equalTo(ItemType.SODA));
+        assertThat(result.getName(), equalTo(TEST_ITEM_NAME));
     }
 
     @Test
@@ -93,17 +96,32 @@ class ItemControllerTest {
     }
 
     @Test
+    public void testAddItemTooManySodas() {
+        ItemUpdateRequest request = new ItemUpdateRequest();
+        request.setType(ItemType.SODA);
+        request.setName(TEST_ITEM_NAME);
+        when(itemDAO.getGetSodaCountInFridge(TEST_FRIDGE_ID))
+            .thenReturn(ItemController.MAX_SODAS_PER_FRIDGE);
+
+        assertThrows(
+            ValidationException.class,
+            () -> itemController.addItem(TEST_FRIDGE_ID, request)
+        );
+    }
+
+    @Test
     public void testUpdateItem() {
         ItemUpdateRequest request = new ItemUpdateRequest();
-        request.setType(ItemType.EGGS);
-        request.setName("Dozen eggs");
+        request.setType(ItemType.SODA);
+        request.setName(TEST_ITEM_NAME);
+        mockNoSodas();
         when(itemDAO.getItemById(TEST_ITEM_ID, TEST_FRIDGE_ID))
             .thenReturn(new Item(TEST_ITEM_ID, TEST_FRIDGE_ID, ItemType.MEAT, "Steak"));
 
         itemController.updateItem(TEST_ITEM_ID, TEST_FRIDGE_ID, request);
 
         verify(itemDAO, times(1))
-            .updateItem(TEST_ITEM_ID, TEST_FRIDGE_ID, ItemType.EGGS, "Dozen eggs");
+            .updateItem(TEST_ITEM_ID, TEST_FRIDGE_ID, ItemType.SODA, TEST_ITEM_NAME);
     }
 
     @Test
@@ -119,10 +137,31 @@ class ItemControllerTest {
     }
 
     @Test
+    public void testUpdateItemTooManySodas() {
+        ItemUpdateRequest request = new ItemUpdateRequest();
+        request.setType(ItemType.SODA);
+        request.setName(TEST_ITEM_NAME);
+        when(itemDAO.getItemById(TEST_ITEM_ID, TEST_FRIDGE_ID))
+            .thenReturn(new Item(TEST_ITEM_ID, TEST_FRIDGE_ID, ItemType.MEAT, "Steak"));
+        when(itemDAO.getGetSodaCountInFridge(TEST_FRIDGE_ID))
+            .thenReturn(ItemController.MAX_SODAS_PER_FRIDGE);
+
+        assertThrows(
+            ValidationException.class,
+            () -> itemController.updateItem(TEST_ITEM_ID, TEST_FRIDGE_ID, request)
+        );
+    }
+
+    @Test
     public void testDeleteItem() {
         itemController.deleteItem(TEST_ITEM_ID, TEST_FRIDGE_ID);
 
         verify(itemDAO, times(1))
             .deleteItem(TEST_ITEM_ID, TEST_FRIDGE_ID);
+    }
+
+    private void mockNoSodas() {
+        when(itemDAO.getGetSodaCountInFridge(anyLong()))
+            .thenReturn(0);
     }
 }

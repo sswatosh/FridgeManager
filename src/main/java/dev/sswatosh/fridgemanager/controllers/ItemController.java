@@ -16,6 +16,8 @@ import java.util.List;
 public class ItemController {
     Logger logger = LoggerFactory.getLogger(ItemController.class);
 
+    static final int MAX_SODAS_PER_FRIDGE = 12;
+
     private final ItemDAO itemDAO;
     private final FridgeDAO fridgeDAO;
 
@@ -43,6 +45,10 @@ public class ItemController {
             throw new ValidationException("'name' field is required'");
         }
 
+        if (request.getType() == ItemType.SODA) {
+            checkSodaCountBeforeNewSoda(fridgeId);
+        }
+
         long newId = itemDAO.createItem(fridgeId, request.getType(), request.getName());
         Item item = new Item(newId, fridgeId, request.getType(), request.getName());
 
@@ -52,6 +58,10 @@ public class ItemController {
 
     public void updateItem(long itemId, long fridgeId, ItemUpdateRequest request) {
         Item currentItem = itemDAO.getItemById(itemId, fridgeId);
+
+        if (request.getType() == ItemType.SODA && currentItem.getType() != ItemType.SODA) {
+            checkSodaCountBeforeNewSoda(fridgeId);
+        }
 
         ItemType type = getOriginalOrUpdated(currentItem.getType(), request.getType());
         String name = getOriginalOrUpdated(currentItem.getName(), request.getName());
@@ -67,5 +77,12 @@ public class ItemController {
 
     private <T> T getOriginalOrUpdated(T original, @Nullable T updated) {
         return updated != null ? updated : original;
+    }
+
+    private void checkSodaCountBeforeNewSoda(long fridgeId) {
+        int sodaCount = itemDAO.getGetSodaCountInFridge(fridgeId);
+        if (sodaCount >= MAX_SODAS_PER_FRIDGE) {
+            throw new ValidationException("Fridge already contains the maximum number of sodas");
+        }
     }
 }

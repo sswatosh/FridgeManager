@@ -44,6 +44,11 @@ public class ItemDAO {
     private static final String DELETE_ITEM =
         "DELETE FROM item WHERE id = ? AND fridge_id = ?";
 
+    private static final String GET_SODA_COUNT_IN_FRIDGE =
+        "SELECT count(*) AS count FROM item " +
+        "WHERE type = '" + ItemType.SODA.name() + "' " +
+        "AND fridge_id = ? ";
+
     final Function<ResultSet, Item> parseItemFromResultSet = resultSet -> {
         try {
             long id = resultSet.getLong("id");
@@ -54,6 +59,16 @@ public class ItemDAO {
         }
         catch (SQLException e) {
             logger.error("Failed to parse ResultSet when selecting item by id", e);
+            throw new DatabaseException("Failed to parse ResultSet", e);
+        }
+    };
+
+    final Function<ResultSet, Integer> parseCountFromResultSet = resultSet -> {
+        try {
+            return resultSet.getInt("count");
+        }
+        catch (SQLException e) {
+            logger.error("Failed to parse ResultSet when counting items", e);
             throw new DatabaseException("Failed to parse ResultSet", e);
         }
     };
@@ -76,5 +91,9 @@ public class ItemDAO {
 
     public void deleteItem(long id, long fridgeId) {
         jdbcHelper.update(DELETE_ITEM, List.of(id, fridgeId));
+    }
+
+    public int getGetSodaCountInFridge(long fridgeId) {
+        return jdbcHelper.selectOne(GET_SODA_COUNT_IN_FRIDGE, List.of(fridgeId), parseCountFromResultSet);
     }
 }
