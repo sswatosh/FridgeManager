@@ -1,10 +1,11 @@
 package dev.sswatosh.fridgemanager.controllers;
 
+import com.codahale.metrics.MetricRegistry;
 import dev.sswatosh.fridgemanager.domain.Item;
 import dev.sswatosh.fridgemanager.domain.ItemType;
 import dev.sswatosh.fridgemanager.domain.ItemUpdateRequest;
 import dev.sswatosh.fridgemanager.exceptions.ValidationException;
-import dev.sswatosh.fridgemanager.repository.FridgeDAO;
+import dev.sswatosh.fridgemanager.metrics.Metrics;
 import dev.sswatosh.fridgemanager.repository.ItemDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +20,15 @@ public class ItemController {
     static final int MAX_SODAS_PER_FRIDGE = 12;
 
     private final ItemDAO itemDAO;
-    private final FridgeDAO fridgeDAO;
+    private final MetricRegistry metricRegistry;
 
     @Inject
     public ItemController(
         ItemDAO itemDAO,
-        FridgeDAO fridgeDAO
+        MetricRegistry metricRegistry
     ) {
         this.itemDAO = itemDAO;
-        this.fridgeDAO = fridgeDAO;
+        this.metricRegistry = metricRegistry;
     }
 
     public List<Item> getItems(long fridgeId) {
@@ -53,6 +54,7 @@ public class ItemController {
         Item item = new Item(newId, fridgeId, request.getType(), request.getName());
 
         logger.info("Item added. id: {}, fridgeId: {}", newId, fridgeId);
+        metricRegistry.counter(Metrics.ITEM_COUNT).inc();
         return item;
     }
 
@@ -66,13 +68,14 @@ public class ItemController {
         ItemType type = getOriginalOrUpdated(currentItem.getType(), request.getType());
         String name = getOriginalOrUpdated(currentItem.getName(), request.getName());
 
-        logger.info("Item updated. id: {}, fridgeId: {}", itemId, fridgeId);
         itemDAO.updateItem(itemId, fridgeId, type, name);
+        logger.info("Item updated. id: {}, fridgeId: {}", itemId, fridgeId);
     }
 
     public void deleteItem(long itemId, long fridgeId) {
-        logger.info("Item deleted. id: {}, fridgeId: {}", itemId, fridgeId);
         itemDAO.deleteItem(itemId, fridgeId);
+        logger.info("Item deleted. id: {}, fridgeId: {}", itemId, fridgeId);
+        metricRegistry.counter(Metrics.ITEM_COUNT).dec();
     }
 
     private <T> T getOriginalOrUpdated(T original, @Nullable T updated) {

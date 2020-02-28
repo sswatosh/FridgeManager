@@ -1,8 +1,10 @@
 package dev.sswatosh.fridgemanager.controllers;
 
+import com.codahale.metrics.MetricRegistry;
 import dev.sswatosh.fridgemanager.domain.Fridge;
 import dev.sswatosh.fridgemanager.domain.FridgeUpdateRequest;
 import dev.sswatosh.fridgemanager.exceptions.ValidationException;
+import dev.sswatosh.fridgemanager.metrics.Metrics;
 import dev.sswatosh.fridgemanager.repository.FridgeDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,10 +16,15 @@ public class FridgeController {
     Logger logger = LoggerFactory.getLogger(FridgeController.class);
 
     private final FridgeDAO fridgeDAO;
+    private final MetricRegistry metricRegistry;
 
     @Inject
-    public FridgeController(FridgeDAO fridgeDAO) {
+    public FridgeController(
+        FridgeDAO fridgeDAO,
+        MetricRegistry metricRegistry
+    ) {
         this.fridgeDAO = fridgeDAO;
+        this.metricRegistry = metricRegistry;
     }
 
     public List<Fridge> getFridges() {
@@ -37,6 +44,7 @@ public class FridgeController {
         Fridge fridge = new Fridge(newId, request.getName());
 
         logger.info("Fridge added. Id: {}", newId);
+        metricRegistry.counter(Metrics.FRIDGE_COUNT).inc();
         return fridge;
     }
 
