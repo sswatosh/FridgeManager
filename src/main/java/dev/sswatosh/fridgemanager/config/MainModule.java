@@ -1,6 +1,7 @@
 package dev.sswatosh.fridgemanager.config;
 
 import com.google.inject.AbstractModule;
+import dev.sswatosh.fridgemanager.auth.AuthClientFactory;
 import dev.sswatosh.fridgemanager.handlers.ErrorHandler;
 import dev.sswatosh.fridgemanager.handlers.FridgeHandler;
 import dev.sswatosh.fridgemanager.handlers.FridgesHandler;
@@ -16,6 +17,8 @@ public class MainModule extends AbstractModule {
         bind(FridgeHandler.class);
         bind(ItemsHandler.class);
         bind(ItemHandler.class);
+
+        bind(AuthClientFactory.class);
 
         bind(ServerErrorHandler.class).to(ErrorHandler.class);
     }

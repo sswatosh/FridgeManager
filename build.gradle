@@ -24,9 +24,15 @@ dependencies {
     compile 'io.ratpack:ratpack-guice:1.7.6'
     compile 'io.ratpack:ratpack-dropwizard-metrics:1.7.6'
     compile 'io.ratpack:ratpack-hikari:1.7.6'
+    compile 'io.ratpack:ratpack-session:1.7.6'
 
     compile 'ch.qos.logback:logback-classic:1.2.3'
     compile 'com.h2database:h2:1.4.200'
+
+    compile 'org.pac4j:pac4j-core:3.8.3'
+    compile 'org.pac4j:pac4j-http:3.8.3'
+    compile 'org.pac4j:pac4j-sql:3.8.3'
+    compile 'org.pac4j:ratpack-pac4j:3.0.0'
 
     testImplementation 'org.mockito:mockito-core:3.3.0'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'

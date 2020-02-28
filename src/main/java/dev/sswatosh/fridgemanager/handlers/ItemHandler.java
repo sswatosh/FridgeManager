@@ -1,5 +1,7 @@
 package dev.sswatosh.fridgemanager.handlers;
 
+import dev.sswatosh.fridgemanager.auth.AuthUtil;
+import dev.sswatosh.fridgemanager.auth.Permissions;
 import dev.sswatosh.fridgemanager.controllers.EntityChecker;
 import dev.sswatosh.fridgemanager.controllers.ItemController;
 import dev.sswatosh.fridgemanager.controllers.PathIdParser;
@@ -36,17 +38,25 @@ public class ItemHandler implements Handler {
         entityChecker.checkFridge(fridgeId);
 
         ctx.byMethod(method -> method
-            .get(() -> ctx.render(json(itemController.getItem(getItemId(ctx), fridgeId))))
-            .patch(() -> ctx.parse(fromJson(ItemUpdateRequest.class))
-                .then(request -> {
-                    itemController.updateItem(getItemId(ctx), fridgeId, request);
+            .get(() -> ctx.insert(
+                AuthUtil.requirePermissions(Permissions.VIEW_ITEMS),
+                context -> context.render(json(itemController.getItem(getItemId(ctx), fridgeId)))
+            ))
+            .patch(() -> ctx.insert(
+                AuthUtil.requirePermissions(Permissions.VIEW_ITEMS, Permissions.ADD_EDIT_ITEMS),
+                context -> context.parse(fromJson(ItemUpdateRequest.class))
+                                  .then(request -> {
+                                      itemController.updateItem(getItemId(ctx), fridgeId, request);
+                                      sendNoContent(ctx);
+                                  })
+            ))
+            .delete(() -> ctx.insert(
+                AuthUtil.requirePermissions(Permissions.DELETE_ITEMS),
+                context -> {
+                    itemController.deleteItem(getItemId(ctx), fridgeId);
                     sendNoContent(ctx);
-                })
-            )
-            .delete(() -> {
-                itemController.deleteItem(getItemId(ctx), fridgeId);
-                sendNoContent(ctx);
-            })
+                }
+            ))
         );
     }
 

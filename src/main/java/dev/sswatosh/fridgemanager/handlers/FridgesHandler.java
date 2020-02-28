@@ -1,5 +1,7 @@
 package dev.sswatosh.fridgemanager.handlers;
 
+import dev.sswatosh.fridgemanager.auth.AuthUtil;
+import dev.sswatosh.fridgemanager.auth.Permissions;
 import dev.sswatosh.fridgemanager.controllers.FridgeController;
 import dev.sswatosh.fridgemanager.domain.FridgeUpdateRequest;
 import ratpack.handling.Context;
@@ -22,10 +24,15 @@ public class FridgesHandler implements Handler {
     @Override
     public void handle(Context ctx) throws Exception {
         ctx.byMethod(method -> method
-            .get(() -> ctx.render(json(fridgeController.getFridges())))
-            .post(() -> ctx.parse(fromJson(FridgeUpdateRequest.class))
-                           .then(request -> ctx.render(json(fridgeController.addFridge(request))))
-            )
+            .get(() -> ctx.insert(
+                AuthUtil.requirePermissions(Permissions.VIEW_FRIDGES),
+                context -> context.render(json(fridgeController.getFridges()))
+            ))
+            .post(() -> ctx.insert(
+                AuthUtil.requirePermissions(Permissions.ADD_EDIT_FRIDGES),
+                context -> context.parse(fromJson(FridgeUpdateRequest.class))
+                                  .then(request -> ctx.render(json(fridgeController.addFridge(request))))
+            ))
         );
     }
 }
