@@ -1,8 +1,11 @@
 package dev.sswatosh.fridgemanager.controllers;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import dev.sswatosh.fridgemanager.domain.Fridge;
 import dev.sswatosh.fridgemanager.domain.FridgeUpdateRequest;
 import dev.sswatosh.fridgemanager.exceptions.ValidationException;
+import dev.sswatosh.fridgemanager.metrics.Metrics;
 import dev.sswatosh.fridgemanager.repository.FridgeDAO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +29,9 @@ class FridgeControllerTest {
 
     @Mock
     private FridgeDAO fridgeDAO;
+
+    @Mock
+    private MetricRegistry metricRegistry;
 
     @InjectMocks
     private FridgeController fridgeController;
@@ -42,6 +50,9 @@ class FridgeControllerTest {
 
     @Test
     public void testAddFridge() {
+        Counter mockCounter = mock(Counter.class);
+        when(metricRegistry.counter(Metrics.FRIDGE_COUNT))
+            .thenReturn(mockCounter);
         when(fridgeDAO.createFridge("fridgeName"))
             .thenReturn(100L);
 
@@ -51,6 +62,8 @@ class FridgeControllerTest {
 
         assertThat(result.getId(), equalTo(100L));
         assertThat(result.getName(), equalTo("fridgeName"));
+        verify(mockCounter, times(1))
+            .inc();
     }
 
     @Test

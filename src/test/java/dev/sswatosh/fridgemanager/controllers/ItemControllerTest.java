@@ -1,9 +1,12 @@
 package dev.sswatosh.fridgemanager.controllers;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import dev.sswatosh.fridgemanager.domain.Item;
 import dev.sswatosh.fridgemanager.domain.ItemType;
 import dev.sswatosh.fridgemanager.domain.ItemUpdateRequest;
 import dev.sswatosh.fridgemanager.exceptions.ValidationException;
+import dev.sswatosh.fridgemanager.metrics.Metrics;
 import dev.sswatosh.fridgemanager.repository.ItemDAO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +33,9 @@ class ItemControllerTest {
 
     @Mock
     private ItemDAO itemDAO;
+
+    @Mock
+    private MetricRegistry metricRegistry;
 
     @InjectMocks
     private ItemController itemController;
@@ -65,6 +71,9 @@ class ItemControllerTest {
         mockNoSodas();
         when(itemDAO.createItem(TEST_FRIDGE_ID, ItemType.SODA, TEST_ITEM_NAME))
             .thenReturn(TEST_ITEM_ID);
+        Counter mockCounter = mock(Counter.class);
+        when(metricRegistry.counter(Metrics.ITEM_COUNT))
+            .thenReturn(mockCounter);
 
         Item result = itemController.addItem(TEST_FRIDGE_ID, request);
 
@@ -72,6 +81,8 @@ class ItemControllerTest {
         assertThat(result.getFridgeId(), equalTo(TEST_FRIDGE_ID));
         assertThat(result.getType(), equalTo(ItemType.SODA));
         assertThat(result.getName(), equalTo(TEST_ITEM_NAME));
+        verify(mockCounter, times(1))
+            .inc();
     }
 
     @Test
@@ -154,10 +165,16 @@ class ItemControllerTest {
 
     @Test
     public void testDeleteItem() {
+        Counter mockCounter = mock(Counter.class);
+        when(metricRegistry.counter(Metrics.ITEM_COUNT))
+            .thenReturn(mockCounter);
+
         itemController.deleteItem(TEST_ITEM_ID, TEST_FRIDGE_ID);
 
         verify(itemDAO, times(1))
             .deleteItem(TEST_ITEM_ID, TEST_FRIDGE_ID);
+        verify(mockCounter, times(1))
+            .dec();
     }
 
     private void mockNoSodas() {

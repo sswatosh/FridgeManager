@@ -167,6 +167,23 @@ class MainTest {
         checkBody("[]");
     }
 
+    @Test
+    @Order(12)
+    public void testBadRequest() {
+        POST("/api/fridges", "{}", ADULT);
+        checkStatus(Status.BAD_REQUEST);
+    }
+
+    @Test
+    @Order(13)
+    public void testMissingEntity() {
+        GET("/api/fridges/100", ADULT);
+        checkStatus(Status.NOT_FOUND);
+
+        GET("/api/fridges/1/items/100", ADULT);
+        checkStatus(Status.NOT_FOUND);
+    }
+
     private void GET(String path, String token) {
         makeRequest(path, "", HttpMethod.GET, token);
     }
